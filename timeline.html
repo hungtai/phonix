@@ -1,0 +1,542 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>職涯時間軸最終完美版 (單一畫面優化)</title>
+<style>
+html, body {
+  height: 100%;
+  margin: 0;
+}
+body {
+  font-family: Arial, sans-serif;
+  background: linear-gradient(135deg,#667eea 0%,#764ba2 100%);
+  display: flex;
+  flex-direction: column; 
+  justify-content: flex-start;
+  align-items: center;
+  min-height: 100vh;
+  padding: 10px; 
+  box-sizing: border-box;
+}
+h1 {
+  text-align: center;
+  color: #fff;
+  font-size: 2.5em; 
+  font-weight: 300;
+  letter-spacing: 3px;
+  text-shadow: 1px 1px 4px rgba(0, 0, 0, 0.25);
+  margin-top: 0; 
+  margin-bottom: 15px; 
+}
+.container {
+  max-width:1150px;
+  margin:0 auto;
+  width: 100%; 
+}
+.timeline-section {
+  background: rgba(255,255,255,0.15);
+  backdrop-filter: blur(9px);
+  border-radius:20px;
+  padding: 20px 20px 15px 20px; 
+  margin-bottom:0; 
+  box-shadow:0 6px 22px rgba(0,0,0,0.09);
+  position:relative;
+}
+.timeline-container {
+  position:relative; width:100%;
+  height:330px; 
+  min-height:290px;
+}
+.center-display {
+  position:absolute; top:15px; left:50%;
+  background: linear-gradient(45deg,#ff6b6b,#feca57); color:white;
+  padding:18px 32px; border-radius:20px;
+  box-shadow:0 7px 23px rgba(0,0,0,0.15);
+  text-align:center; min-width:255px; font-size: 1.18em;
+  opacity:0; transform:translateX(-50%) scale(0.88);
+  transition: all 0.6s cubic-bezier(0.68, -0.55, 0.265, 1.55);
+  z-index:100;
+  pointer-events: none;
+}
+.center-display.show{ opacity:1; transform:translateX(-50%) scale(1); pointer-events: auto;}
+.center-display.hide{ opacity:0; transform:translateX(-50%) scale(0.8) translateY(110px);}
+.center-year{ font-size:1.65em; font-weight:bold; margin-bottom:5px; line-height:1;}
+.center-event{ font-size:1.05em; }
+.center-category{ font-size:0.95em; margin-top:7px; background: rgba(255,255,255,0.18); padding:5px 16px; border-radius:13px; display:inline-block;}
+.timeline {
+  position:absolute;
+  bottom:112px;
+  width:98%; left:1%;
+  height:52px; border-bottom:2.8px solid rgba(255,255,255,0.82);
+  z-index:2;
+}
+.event {
+  position:absolute; bottom:-9px; width:18px; height:18px;
+  background: linear-gradient(45deg,#ff6b6b,#feca57); border-radius:50%;
+  transition: all 0.38s ease; opacity:0; transform: scale(0); cursor: pointer; z-index:10;
+}
+.event.animate{ opacity:1!important; transform: scale(1);}
+.event:hover{ transform: scale(1.22); box-shadow: 0 0 15px rgba(255, 107, 107, 0.35);}
+.label-year{ position:absolute; bottom:-28px; transform:translateX(calc(-50% + 10px));
+  color:#fff; font-weight:bold; font-size:1.08em; opacity:0; transition: opacity 0.4s ease; z-index:3;
+}
+.label-line{ position:absolute; width:1.3px; background:#fff; bottom:0; transition: height 0.52s ease;}
+.label-text{ position:absolute; color:#fff; font-size:0.90em; font-weight:bold; white-space:nowrap;overflow:hidden;text-overflow: ellipsis;max-width: 80px; opacity:0; transition: all 0.36s ease;}
+.label-text.animate{ opacity:1;}
+.controls{ text-align: center; margin-top: 8px; margin-bottom: 0px; z-index:150;}
+.btn{
+  background: linear-gradient(45deg,#667eea,#764ba2); color:white; border:none;
+  padding:12px 26px; margin:0 12px; border-radius:21px; cursor:pointer; font-size:1.1em; transition: all 0.25s ease;
+}
+.btn:hover{ transform: translateY(-1px);}
+.btn:disabled{ opacity:0.64; cursor:not-allowed;}
+.progress-bar{
+  width:100%; height:4px; background: rgba(255,255,255,0.26);
+  border-radius:2px; margin:13px 0;
+}
+.progress-fill{
+  height:100%; background: linear-gradient(45deg,#ff6b6b,#feca57); width:0%;
+  transition: width 1.25s cubic-bezier(0.4,0,0.2,1);
+}
+.table-section{
+  background: rgba(255,255,255,0.96);
+  border-radius:17px; padding:20px 8px 24px 8px; margin-top:10px; max-width: 930px;
+  margin-left:auto; margin-right:auto; font-size: 1.05em;
+  display: none; 
+  opacity: 0; 
+  transition: opacity 0.6s ease-in-out; 
+  pointer-events: none; 
+}
+.table-section.show {
+    opacity: 1; 
+    pointer-events: auto; 
+}
+.events-table{ width:100%; border-collapse: collapse; font-size: 1.02em;}
+.events-table thead{ background: linear-gradient(45deg,#667eea,#764ba2); color:white; font-size: 1.08em;}
+.events-table th, .events-table td{ padding:11px 13px; border-bottom:1px solid #eee;}
+.year-cell{ font-weight:bold; color:#667eea;}
+.position-bar-chart {
+  position:absolute;
+  left:1%;
+  width:98%;
+  height:38px;
+  bottom:30px;
+  display:block;
+  z-index:50;
+  pointer-events:none;
+}
+.position-bar {
+  position: absolute;
+  top:0;
+  height: 38px;
+  border-radius: 7px;
+  background: #3D206A;
+  color: #fff;
+  font-weight: bold;
+  font-size: 1.15em;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  opacity:0;
+  transition: opacity 0.65s, left 1s, width 1.1s cubic-bezier(0.68, -0.55, 0.265, 1.5);
+  box-shadow: 0 2px 9px rgba(50,40,70,0.13);
+  letter-spacing: 1px;
+  min-width: 70px;
+  pointer-events:none;
+}
+.position-bar.show{ opacity:1;}
+.position-label {
+  width: 100%; text-align: center;
+}
+@media (max-width:950px){
+  body { justify-content: flex-start; } 
+  h1 { font-size: 1.8em; letter-spacing: 1px; }
+  .timeline-section { padding: 13px 2px 14px 2px;}
+  .timeline-container { height:170px; min-height:100px; }
+  .center-display { min-width:92px; font-size: 0.73em; padding:6px 6px; top:7px;}
+  .timeline { height:19px; font-size:0.7em; bottom:62px;}
+  .label-year, .label-text { font-size:0.68em; }
+  .table-section { font-size:0.75em; padding:7px 1px 10px 1px;}
+  .position-bar-chart { height:12px; bottom:22px;}
+  .position-bar { height:12px; min-width:25px; font-size:0.65em;}
+}
+::-webkit-scrollbar { width:0!important; background:transparent!important; }
+
+/* <<<<< 新增: 年份浮動提示 Tooltip >>>>> */
+.year-tooltip {
+  position: fixed;
+  background: linear-gradient(45deg,#ff6b6b,#feca57);
+  color: #fff;
+  padding: 7px 25px;
+  border-radius: 12px;
+  font-size: 1.08em;
+  font-weight: bold;
+  pointer-events: none;
+  z-index: 1111;
+  box-shadow: 0 4px 13px rgba(0,0,0,0.10);
+  opacity: 0;
+  transition: opacity 0.28s, transform 0.18s;
+  transform: translateY(-14px) scale(0.95);
+}
+.year-tooltip.show {
+  opacity: 1;
+  transform: translateY(-14px) scale(1.04);
+}
+</style>
+</head>
+<body>
+<div class="container">
+  <h1>公司歷練</h1>
+  <div class="timeline-section">
+    <div class="progress-bar"><div class="progress-fill" id="progressFill"></div></div>
+    <div class="timeline-container" style="position:relative;">
+      <div class="center-display" id="centerDisplay">
+        <div class="center-year" id="centerYear"></div>
+        <div class="center-event" id="centerEvent"></div>
+        <div class="center-category" id="centerCategory"></div>
+      </div>
+      <div class="timeline" id="timeline"></div>
+      <div id="positionBarChart" class="position-bar-chart"></div>
+    </div>
+    <div class="controls">
+      <button class="btn" onclick="startAnimation()" id="startBtn">開始動畫</button>
+      <button class="btn" onclick="resetAnimation()">重新開始</button>
+      <button class="btn" onclick="showTable()" id="showTableBtn">顯示表格</button>
+    </div>
+  </div>
+  <div class="table-section" id="tableSection">
+    <h2>組織發展里程碑</h2>
+    <table class="events-table">
+      <thead><tr><th>年度</th><th>重要事件</th><th>類別</th></tr></thead>
+      <tbody id="tableBody"></tbody>
+    </table>
+  </div>
+</div>
+<!-- <<<<< 新增：Tooltip DOM 節點 >>>>> -->
+<div id="yearTooltip" class="year-tooltip"></div>
+
+<script>
+let data=[
+{year:"1999",remark:"進入公司",category:"人事"},
+{year:"2000",remark:"FAB1 自動派送功能",category:"系統建置"},
+{year:"2001",remark:"FAB3建廠, 負責MCS, DCS, CF MES",category:"系統建置"},
+{year:"2002",remark:"建立獨立MES/MCS標準",category:"標準建立"},
+{year:"2003",remark:"獨立符合SEMI標準的AMHS",category:"標準建立"},
+{year:"2004",remark:"建立標準BC based Sorter架構",category:"標準建立"},
+{year:"2005",remark:"完成FAB5 CIM建置",category:"系統建置"},
+{year:"2006",remark:"CIM RMS系統上線",category:"流程標準"},
+{year:"2007",remark:"獨立LCM建 3-tier架構",category:"架構設計"},
+{year:"2008",remark:"RTQCS/RTIT整併",category:"架構設計"},
+{year:"2009",remark:"建立AT團隊光學部門",category:"組織發展"},
+{year:"2010",remark:"3合一, 與AT共同營運",category:"組織發展"},
+{year:"2011",remark:"完成對位系統算法",category:"技術突破"},
+{year:"2012",remark:"完成規則式影像檢測核心",category:"技術突破"},
+{year:"2013",remark:"南京OCA貼膜,上海ACF壓痕檢測系統上線",category:"系統建置"},
+{year:"2014",remark:"台南MOD P-line 上線",category:"技術突破"},
+{year:"2015",remark:"建立CIM 影像小組",category:"組織發展"},
+{year:"2016",remark:"完整版INX影響函式庫1.0",category:"技術發展"},
+{year:"2017",remark:"第一版Rule-based ADJ上線",category:"技術突破"},
+{year:"2018",remark:"高頻EDC資料系統研製上線",category:"系統建置"},
+{year:"2019",remark:"AI ADJ 上線",category:"AI技術"},
+{year:"2020",remark:"iEHM, CFM,UMD APP上線",category:"技術突破"},
+{year:"2021",remark:"GPU Pool, Ensemble model, API gatway上線",category:"技術突破"},
+{year:"2022",remark:"PLP MES研製, iDMMC系統上線",category:"技術發展"},
+{year:"2023",remark:"ADR1.0 架構開發完成",category:"AI技術"},
+{year:"2024",remark:"PLP MES開發完成",category:"技術突破"},
+{year:"2025",remark:"ADR2.0 Ready",category:"AI技術"},
+{year:"2025",remark:"Auto Labeling Ready",category:"AI技術"}];
+
+let timelineElements=[], animationIndex=0, isAnimating=false;
+let lastLayerIndex = -1;
+let clickTimeout;
+let animationDelayMultiplier = 2;
+const elementAnimationDuration = 700;
+const lineConnectionDelay = 64;
+
+const positions = [
+{start: 1999, end: 2003, label: "工程師", color: "#1976d2"},
+{start: 2003, end: 2007, label: "課長", color: "#388e3c"},
+{start: 2007, end: 2011, label: "經理", color: "#dc004e"},
+{start: 2011, end: 2016, label: "資深經理", color: "#fbc02d"},
+{start: 2016, end: 2026, label: "處長", color: "#7b1fa2"}
+];
+
+function getNextLayer(layers){
+    lastLayerIndex = (lastLayerIndex + 1) % layers.length;
+    return layers[lastLayerIndex];
+}
+
+function initTimeline(){
+    const timeline=document.getElementById('timeline');
+    const tableBody=document.getElementById('tableBody');
+    timeline.innerHTML=''; timelineElements=[];
+    const minYear=1999;
+    const maxYear=2026;
+    const span=maxYear-minYear;
+    const layers=[50, 80, 110, 140]; 
+    const offsetStep=17;
+    let yearCountMap={};
+    let yearSet=new Set();
+
+    data.sort((a,b)=>parseInt(a.year)-parseInt(b.year)).forEach(item=>{
+        const yearNum=parseInt(item.year);
+        const percent=((yearNum-minYear)/span)*90+5;
+
+        let yearLabel=null;
+        if(!yearSet.has(item.year) && (parseInt(item.year) % 5 === 0 || item.year==minYear)){
+            yearLabel=document.createElement('div');
+            yearLabel.className='label-year';
+            yearLabel.style.left=percent+'%';
+            yearLabel.textContent=item.year;
+            timeline.appendChild(yearLabel);
+            yearSet.add(item.year);
+        }
+
+        const eventEl=document.createElement('div');
+        eventEl.className='event';
+        eventEl.style.left=percent+'%';
+        eventEl.setAttribute('data-year', item.year); // <<<<< 新增: 給圓點加年份屬性
+        eventEl.addEventListener('click',()=>showClickedEvent(item));
+        timeline.appendChild(eventEl);
+
+        if(!yearCountMap[item.year]) yearCountMap[item.year]=0;
+        const currentLayerBottom = getNextLayer(layers);
+        let offset=((yearCountMap[item.year] % 2 === 0 ? 1 : -1) * Math.floor(yearCountMap[item.year]/2) * offsetStep);
+        yearCountMap[item.year]++;
+
+        const lineEl=document.createElement('div');
+        lineEl.className='label-line';
+        const offsetRight = 0.7;
+        lineEl.style.left=(percent+offset+offsetRight)+'%';
+        lineEl.style.height='0px'; 
+        timeline.appendChild(lineEl);
+
+        const textEl=document.createElement('div');
+        textEl.className='label-text';
+        textEl.style.left=(percent+offset+offsetRight)+'%';
+        textEl.style.bottom = '0px'; 
+        textEl.textContent=item.remark;
+        textEl.title = item.remark;
+        timeline.appendChild(textEl);
+
+        timelineElements.push({
+            event:eventEl,
+            line:lineEl,
+            label:textEl,
+            labelBottomBase: currentLayerBottom,
+            yearLabel:yearLabel,
+            data:item
+        });
+    });
+
+    tableBody.innerHTML='';
+    data.forEach(item=>{
+        const row=document.createElement('tr');
+        row.innerHTML=`<td class="year-cell">${item.year}</td><td>${item.remark}</td><td><span style="background:linear-gradient(45deg,#667eea,#764ba2);color:white;padding:4px 10px;border-radius:9px;">${item.category}</span></td>`;
+        tableBody.appendChild(row);
+    });
+
+    renderPositionBar(minYear, maxYear);
+    hidePositionBarChart();
+
+    // <<<<< 新增：建立年份圓點浮框的滑鼠事件 >>>>>
+    const tooltip = document.getElementById('yearTooltip');
+    timelineElements.forEach(e => {
+      if(e.event && e.data && e.data.year) {
+        // 滑鼠移入，顯示年份浮框
+        e.event.addEventListener('mouseenter', (ev) => {
+          tooltip.textContent = e.data.year;
+          tooltip.classList.add('show');
+          // 定位到滑鼠座標上方
+          tooltip.style.left = (ev.clientX + 8) + 'px';
+          tooltip.style.top = (ev.clientY - 36) + 'px';
+        });
+        // 滑鼠移動同時移動浮框
+        e.event.addEventListener('mousemove', (ev) => {
+          tooltip.style.left = (ev.clientX + 8) + 'px';
+          tooltip.style.top = (ev.clientY - 36) + 'px';
+        });
+        // 滑鼠移出，隱藏浮框
+        e.event.addEventListener('mouseleave', () => {
+          tooltip.classList.remove('show');
+        });
+      }
+    });
+}
+
+function showClickedEvent(eventData){
+    if(isAnimating) return;
+    resetAnimation();
+    const center=document.getElementById('centerDisplay');
+    if(!center) return;
+
+    if(clickTimeout) clearTimeout(clickTimeout);
+
+    showCenterDisplay(eventData);
+
+    clickTimeout=setTimeout(()=>{
+        center.classList.remove('show');
+        center.classList.add('hide');
+        setTimeout(()=>center.style.display = 'none',600);
+    },800);
+}
+
+function startAnimation(){
+    if(isAnimating) return;
+    isAnimating=true; animationIndex=0;
+    document.getElementById('startBtn').disabled=true;
+    document.getElementById('startBtn').textContent='動畫進行中...';
+
+    hidePositionBarChart();
+    const center=document.getElementById('centerDisplay');
+    center.classList.remove('show');
+    center.classList.add('hide');
+    if(clickTimeout){ clearTimeout(clickTimeout); clickTimeout=null; }
+    setTimeout(() => {
+        center.style.display = 'none';
+    }, 600);
+
+    document.getElementById('tableSection').style.display = 'none';
+    document.getElementById('tableSection').classList.remove('show');
+
+    timelineElements.forEach((current, index) => {
+        if (!current || !current.data) return;
+        setTimeout(() => {
+            if(current.event) current.event.classList.add('animate');
+            if(current.yearLabel) current.yearLabel.style.opacity='1';
+            if(current.label) current.label.classList.add('animate');
+            const circleRadius = 9;
+            if(current.line){
+                current.line.style.height='0px';
+                setTimeout(()=>{
+                    const increasedHeight = current.labelBottomBase + circleRadius + 30;
+                    current.line.style.height = increasedHeight + 'px';
+                    current.label.style.bottom = increasedHeight + 'px';
+                }, lineConnectionDelay);
+            }
+        }, index * (50 * animationDelayMultiplier) + elementAnimationDuration);
+    });
+
+    const progressBarFill = document.getElementById('progressFill');
+    progressBarFill.style.width = '0%';
+    setTimeout(() => {
+        progressBarFill.style.width = '100%';
+    }, 100);
+
+    const totalAnimationDurationEstimate = (timelineElements.length * (50 * animationDelayMultiplier)) + elementAnimationDuration + 500;
+
+    setTimeout(() => {
+        isAnimating = false;
+        document.getElementById('startBtn').disabled = false;
+        document.getElementById('startBtn').textContent = '開始動畫';
+        showPositionBarChart();
+    }, totalAnimationDurationEstimate);
+}
+
+function showCenterDisplay(d){
+    const center=document.getElementById('centerDisplay');
+    center.classList.remove('show','hide');
+    center.style.display = 'block';
+    setTimeout(()=>{
+        document.getElementById('centerYear').textContent=d.year;
+        document.getElementById('centerEvent').textContent=d.remark;
+        document.getElementById('centerCategory').textContent=d.category;
+        center.classList.add('show');
+    },40);
+}
+
+function resetAnimation(){
+    isAnimating = false; animationIndex = 0; lastLayerIndex = -1;
+    document.getElementById('startBtn').disabled = false;
+    document.getElementById('startBtn').textContent = '開始動畫';
+    document.getElementById('progressFill').style.width = '0%';
+
+    const center = document.getElementById('centerDisplay');
+    center.classList.remove('show', 'hide');
+    center.style.display = 'block'; 
+    if(clickTimeout){ clearTimeout(clickTimeout); clickTimeout = null; }
+
+    timelineElements.forEach(e => {
+        if(e.event) e.event.className = 'event';
+        if(e.label) e.label.className = 'label-text';
+        if(e.line) { e.line.style.height = '0px'; }
+        if(e.label) { e.label.style.bottom = '0px'; }
+        if(e.yearLabel) e.yearLabel.style.opacity = '0';
+    });
+
+    document.querySelectorAll('#tableBody tr').forEach(r => r.className = '');
+
+    hidePositionBarChart();
+
+    const t = document.getElementById('tableSection');
+    t.style.display = 'none';
+    t.classList.remove('show');
+
+    // <<<<< 新增: 重設時順便隱藏年份浮框 >>>>>
+    const tooltip = document.getElementById('yearTooltip');
+    if (tooltip) tooltip.classList.remove('show');
+}
+
+function showTable(){
+    if (isAnimating) {
+        alert("請等待動畫播放完畢後再顯示表格。");
+        return;
+    }
+
+    const t = document.getElementById('tableSection');
+    t.style.display = 'block';
+    setTimeout(() => {
+        t.classList.add('show');
+        document.querySelectorAll('#tableBody tr').forEach((row, i) => {
+            setTimeout(() => row.classList.add('show'), i * 60);
+        });
+    }, 100);
+}
+
+function renderPositionBar(minYear, maxYear){
+    const chart=document.getElementById('positionBarChart');
+    chart.innerHTML='';
+    const span = maxYear - minYear;
+    positions.forEach((pos, idx)=>{
+        const leftPercent = ((pos.start - minYear) / span) * 100;
+        const widthPercent = ((pos.end - pos.start) / span) * 100;
+        const bar = document.createElement('div');
+        bar.className = 'position-bar';
+        bar.style.left = leftPercent + '%';
+        bar.style.width = '0%';
+        bar.setAttribute('data-width', widthPercent + '%');
+        bar.style.top = '0';
+        bar.style.background = pos.color;
+
+        const labelDiv = document.createElement('div');
+        labelDiv.className = 'position-label';
+        labelDiv.textContent = pos.label;
+        bar.appendChild(labelDiv);
+        chart.appendChild(bar);
+    });
+}
+
+function showPositionBarChart(){
+    const bars = document.querySelectorAll('.position-bar');
+    bars.forEach((bar, i) => {
+        setTimeout(() => {
+            bar.classList.add('show');
+            bar.style.width = bar.getAttribute('data-width');
+        }, 330 + i * 250);
+    });
+}
+
+function hidePositionBarChart(){
+    const bars = document.querySelectorAll('.position-bar');
+    bars.forEach(bar => {
+        bar.classList.remove('show');
+        bar.style.width = '0%';
+    });
+}
+
+window.addEventListener('DOMContentLoaded', initTimeline);
+</script>
+</body>
+</html>
