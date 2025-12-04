@@ -285,13 +285,15 @@ function initTimeline(){
         const percent=((yearNum-minYear)/span)*90+5;
 
         let yearLabel=null;
-        if(!yearSet.has(item.year) && (parseInt(item.year) % 5 === 0 || item.year==minYear)){
+        if(!yearSet.has(item.year) && (parseInt(item.year) % 5 === 0 || item.year==minYear )){
+          if(item.year != '2000'){
             yearLabel=document.createElement('div');
             yearLabel.className='label-year';
             yearLabel.style.left=percent+'%';
             yearLabel.textContent=item.year;
             timeline.appendChild(yearLabel);
             yearSet.add(item.year);
+          }  
         }
 
         const eventEl=document.createElement('div');
