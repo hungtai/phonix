@@ -1,0 +1,33 @@
+AIR/ADR的發展史:
+東傑ARSS機台
+1.1人多機時期:(KVM or Matrix)
+  a. 1人1機: 人員必須在機台前進行修補線路規劃, 並等待機台修補, 直到修補結束, 換片後再繼續:
+  b. 1人多機: 透過Matrix 或是KVM系統, 人員可以遠端控制多個機台螢幕, 透過切換KVM來達到1人多機目的.
+2. AIR專案時期:(東捷ARSS)
+  a. 規劃&實際修補切開: 透過東捷Repair 機台改造, 先拍照, 進行照片上規劃修補線路, 之後再把OPI規劃的修補線路給機台, 做到可以將"規劃"及"修補"分開, 並堆WIP概念,提高Repair EQ 產能
+3. ADR專案時期:(based on ARSS)
+  a.原本4A AIR專案由IDD負責, 2022年轉交CIM承接
+  b. ADR1.0:透過AI 識別defect位置, 輪廓, 背景線路等影像資訊, 結合Pre-Define的修補規則, 依照實際defect 狀況由系統產生修法, 並交由如ARSS/代操 進行修補操作
+    (已分別在ARY3,ARY5,ARY6 驗證確實可行,困境:ARSS在南?並無大量使用))
+  c. ADR2.0:同樣透過AI 識別Defect位置落點,輪廓,背景, 並預先透過學習人員修補路徑, 藉以產生修補路徑, 減少Pre-Define的修補規則, 但前提必須要記錄人員規劃修法方便學習
+   (已在ARY5 R010產品驗證, 確實可行, 下階段找有用ARSS場域(ARY6)再進行驗證) (困難:ARSS在南?並無大量使用,無有效修補線路可學習)
+4.實例
+  a.ARSS 已全南廠導入, 可惜使用率不高
+  b.ADR1.0 已於ARY3,ARY5, ARY6 上線使用
+  c.ADR2.0 已於ARY5 R010產品驗證, 目前推廣到ARY6
+
+非東傑ARSS機台
+1.ARY7 LCVD case: (使用IPA代操)
+  a.使用機台預設定的Marco功能 (修補線路預先設定在機台)
+  b.IPA(KVM) 實現1人多機功能, 並提供在IPA OPI上人員選Marco ID功能
+  c.IPA+ADR(靜態): 透過rule based, 由ADR 協助選MarcoID 後交由IPA操作機台
+  d.IPA+ADR(動態): 透過advanced-rule based, 由ADR產生修補線路, 交由IPA操作機台修補.
+
+2.T6 PDI case:(使用3部代操)
+  a. 仿ARSS類代操,實施ADR嫁接在不同代操軟體可能性
+  b. 已上線大量使用正常 (-->內部政策轉由IPA承接推廣, 並支援1人多機及KVM Dispatch)
+
+3.T1 御杰科技代操
+  a. 與御杰科技進行ADR 介面串接, 以確認ADR嫁接在不同代操軟體可能性
+  b. 已於北廠大量上線使用正常
+  c. 下階段向ADR2.0靠攏, 透過學習人員修補紀錄產生修法(ongoing)
